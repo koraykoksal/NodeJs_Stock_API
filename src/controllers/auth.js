@@ -3,7 +3,7 @@
     NODEJS EXPRESS | CLARUSWAY FullStack Team
 ------------------------------------------------------- */
 // Auth Controller:
-
+const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const Token = require('../models/token')
 const passwordEncrypt = require('../helpers/passwordEncrypt')
@@ -35,11 +35,18 @@ module.exports = {
 
                 if (user.is_active) {
 
+                    // SIMPLE TOKEN
                     let tokenData = await Token.findOne({ user_id: user._id })
                     if (!tokenData) tokenData = await Token.create({
                         user_id: user._id,
                         token: passwordEncrypt(user._id + Date.now())
                     })
+
+                    // JWT TOKEN
+                    //? kullanıcının şifresi değişirse access_key ile erişim yapamayacak
+                    const accesToken=jwt.sign(user.toJSON(),user.password,{expiresIn:'30m'})
+
+                    const refreshToken = jwt.sign({_id:user._id,password:user.password},process.env.REFRESH_KEY,{expiresIn:'3d'})
 
                     // Use UUID:
                     // const { randomUUID } = require('node:crypto')
@@ -53,6 +60,10 @@ module.exports = {
                         // token: tokenData.token,
                         // FOR REACT PROJECT:
                         key: tokenData.token,
+                        bearer:{
+                            accesToken,
+                            refreshToken
+                        },
                         user,
                     })
 
