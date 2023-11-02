@@ -6,9 +6,12 @@ const router = require('express').Router()
 /* ------------------------------------------------------- */
 // routes/user:
 
+const { isLogin } = require('../middlewares/permissions')
 const user = require('../controllers/user')
 
 // URL: /users
+
+router.use(isLogin)
 
 router.route('/')
     .get(user.list)

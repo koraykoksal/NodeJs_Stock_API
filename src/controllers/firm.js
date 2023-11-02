@@ -41,19 +41,9 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Firmname": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Firm' }
             }
         */
-
-        // Disallow setting admin/staff:
-        req.body.is_staff = false
-        req.body.is_superadmin = false
 
         const data = await Firm.create(req.body)
 
@@ -84,13 +74,7 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Firmname": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Firm' }
             }
         */
 

@@ -22,7 +22,7 @@ module.exports = {
             `
         */
 
-        const data = await res.getModelList(Product)
+        const data = await res.getModelList(Product, {}, ['category_id', 'brand_id'])
 
         // res.status(200).send({
         //     error: false,
@@ -41,19 +41,9 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Productname": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Product' }
             }
         */
-
-        // Disallow setting admin/staff:
-        req.body.is_staff = false
-        req.body.is_superadmin = false
 
         const data = await Product.create(req.body)
 
@@ -69,7 +59,7 @@ module.exports = {
             #swagger.summary = "Get Single Product"
         */
 
-        const data = await Product.findOne({ _id: req.params.id })
+        const data = await Product.findOne({ _id: req.params.id }).populate(['category_id', 'brand_id'])
 
         res.status(200).send({
             error: false,
@@ -84,13 +74,7 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Productname": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Product' }
             }
         */
 

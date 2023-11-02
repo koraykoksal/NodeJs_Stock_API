@@ -53,7 +53,6 @@ const PurchaseSchema = new mongoose.Schema({
     price_total: {
         type: Number,
         default: function () { return this.price * this.quantity }, // for CREATE
-        //! otomatik hesaplama yapmak için transfor ve default bilgisi beraber kullanılmalıdır
         transform: function () { return this.price * this.quantity }, // for UPDATE
         // set: function () { return this.price * this.quantity } // for sendingData
     }

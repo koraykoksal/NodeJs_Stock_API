@@ -8,8 +8,13 @@ module.exports = (req, res, next) => {
 // Searching & Sorting & Pagination:  
 
     // SEARCHING: URL?search[key1]=value1&search[key2]=value2
-    const search = req.query?.search || {}
+    let search = req.query?.search || {}
     for (let key in search) search[key] = { $regex: search[key], $options: 'i' }
+    /* Alternative Searching: *
+    let where = [];
+    for (let key in search) where.push(`this.${key}.toString().includes('${search[key]}')`)
+    search = where.length ? { $where: where.join(' && ') } : {}
+    /* Alternative Searching: */
 
     // SORTING: URL?sort[key1]=1&sort[key2]=-1 (1:ASC, -1:DESC)
     const sort = req.query?.sort || {}
@@ -30,7 +35,9 @@ module.exports = (req, res, next) => {
 
         const filtersAndSearch = { ...filters, ...search  }
 
-        return await Model.find(filtersAndSearch).sort(sort).skip(skip).limit(limit).populate(populate)
+        // return await Model.find(filtersAndSearch).sort(sort).skip(skip).limit(limit).populate(populate)
+        // FOR REACT PROJECT:
+        return await Model.find(filtersAndSearch).populate(populate)
     }
 
     // Details:

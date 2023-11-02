@@ -8,8 +8,8 @@ const router = require('express').Router()
 
 // URL: /
 
-// // auth:
-// router.use('/auth', require('./auth'))
+// auth:
+router.use('/auth', require('./auth'))
 // user:
 router.use('/users', require('./user'))
 // token:
@@ -24,10 +24,10 @@ router.use('/categories', require('./category'))
 router.use('/firms', require('./firm'))
 // product:
 router.use('/products', require('./product'))
-// // purchase:
-// router.use('/purchases', require('./purchase'))
-// // sale:
-// router.use('/sales', require('./sale'))
+// purchase:
+router.use('/purchases', require('./purchase'))
+// sale:
+router.use('/sales', require('./sale'))
 
 // document:
 router.use('/documents', require('./document'))

@@ -22,7 +22,7 @@ module.exports = {
             `
         */
 
-        const data = await res.getModelList(Purchase)
+        const data = await res.getModelList(Purchase, {}, ['firm_id', 'brand_id', 'product_id'])
 
         // res.status(200).send({
         //     error: false,
@@ -41,19 +41,12 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Purchasename": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Purchase' }
             }
         */
 
-        // Disallow setting admin/staff:
-        req.body.is_staff = false
-        req.body.is_superadmin = false
+        // Auto add user_id to req.body:
+        req.body.user_id = req.user?._id
 
         const data = await Purchase.create(req.body)
 
@@ -69,7 +62,7 @@ module.exports = {
             #swagger.summary = "Get Single Purchase"
         */
 
-        const data = await Purchase.findOne({ _id: req.params.id })
+        const data = await Purchase.findOne({ _id: req.params.id }).populate(['firm_id', 'brand_id', 'product_id'])
 
         res.status(200).send({
             error: false,
@@ -84,13 +77,7 @@ module.exports = {
             #swagger.parameters['body'] = {
                 in: 'body',
                 required: true,
-                schema: {
-                    "Purchasename": "test",
-                    "password": "1234",
-                    "email": "test@site.com",
-                    "first_name": "test",
-                    "last_name": "test",
-                }
+                schema: { $ref: '#/definitions/Purchase' }
             }
         */
 
