@@ -3,6 +3,7 @@
     NODEJS EXPRESS | CLARUSWAY FullStack Team
 ------------------------------------------------------- */
 // Auth Controller:
+
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const Token = require('../models/token')
@@ -14,7 +15,7 @@ module.exports = {
         /*
             #swagger.tags = ["Authentication"]
             #swagger.summary = "Login"
-            #swagger.description = 'Login with username (or email) and password.'
+            #swagger.description = 'Login with username (or email) and password for get simpleToken and JWT'
             #swagger.parameters["body"] = {
                 in: "body",
                 required: true,
@@ -35,35 +36,31 @@ module.exports = {
 
                 if (user.is_active) {
 
-                    // SIMPLE TOKEN
+                    // Use UUID:
+                    // const { randomUUID } = require('node:crypto')
+                    // let tokenData = await Token.findOne({ user_id: user._id })
+                    // if (!tokenData) tokenData = await Token.create({
+                    //     user_id: user._id,
+                    //     token: randomUUID()
+                    // })
+
+                    // TOKEN:
                     let tokenData = await Token.findOne({ user_id: user._id })
                     if (!tokenData) tokenData = await Token.create({
                         user_id: user._id,
                         token: passwordEncrypt(user._id + Date.now())
                     })
 
-                    // JWT TOKEN
-                    //? kullanıcının şifresi değişirse access_key ile erişim yapamayacak
-                    const accesToken=jwt.sign(user.toJSON(),user.password,{expiresIn:'30m'})
-
-                    const refreshToken = jwt.sign({_id:user._id,password:user.password},process.env.REFRESH_KEY,{expiresIn:'3d'})
-
-                    // Use UUID:
-                    // const { randomUUID } = require('node:crypto')
-                    // if (!tokenData) tokenData = await Token.create({
-                    //     user_id: user._id,
-                    //     token: randomUUID()
-                    // })
+                    // JWT:
+                    const accessToken = jwt.sign(user.toJSON(), process.env.ACCESS_KEY, { expiresIn: '30m' })
+                    const refreshToken = jwt.sign({ _id: user._id, password: user.password }, process.env.REFRESH_KEY, { expiresIn: '3d' })
 
                     res.send({
                         error: false,
-                        // token: tokenData.token,
                         // FOR REACT PROJECT:
                         key: tokenData.token,
-                        bearer:{
-                            accesToken,
-                            refreshToken
-                        },
+                        // token: tokenData.token,
+                        bearer: { accessToken, refreshToken },
                         user,
                     })
 
@@ -84,24 +81,104 @@ module.exports = {
         }
     },
 
+    refresh: async (req, res) => {
+        /*
+            #swagger.tags = ['Authentication']
+            #swagger.summary = 'JWT: Refresh'
+            #swagger.description = 'Refresh accessToken with refreshToken'
+            #swagger.parameters['body'] = {
+                in: 'body',
+                required: true,
+                schema: {
+                    bearer: {
+                        refresh: '...refreshToken...'
+                    }
+                }
+            }
+        */
+
+        const refreshToken = req.body?.bearer?.refreshToken
+
+        if (refreshToken) {
+
+            jwt.verify(refreshToken, process.env.REFRESH_KEY, async function (err, userData) {
+
+                if (err) {
+
+                    res.errorStatusCode = 401
+                    throw err
+                } else {
+
+                    const { _id, password } = userData
+
+                    if (_id && password) {
+
+                        const user = await User.findOne({ _id })
+
+                        if (user && user.password == password) {
+
+                            if (user.is_active) {
+
+                                // JWT:
+                                const accessToken = jwt.sign(user.toJSON(), process.env.ACCESS_KEY, { expiresIn: '30m' })
+
+                                res.send({
+                                    error: false,
+                                    bearer: { accessToken }
+                                })
+
+                            } else {
+
+                                res.errorStatusCode = 401
+                                throw new Error('This account is not active.')
+                            }
+                        } else {
+
+                            res.errorStatusCode = 401
+                            throw new Error('Wrong id or password.')
+                        }
+                    } else {
+
+                        res.errorStatusCode = 401
+                        throw new Error('Please enter id and password.')
+                    }
+                }
+            })
+
+        } else {
+            res.errorStatusCode = 401
+            throw new Error('Please enter token.refresh')
+        }
+    },
+
     logout: async (req, res) => {
         /*
             #swagger.tags = ["Authentication"]
-            #swagger.summary = "Logout"
+            #swagger.summary = "simpleToken: Logout"
             #swagger.description = 'Delete token key.'
         */
 
-        const auth = req.headers?.authorization || null // Token ...tokenKey...
-        const tokenKey = auth ? auth.split(' ') : null // ['Token', '...tokenKey...']
+        const auth = req.headers?.authorization || null // Token ...tokenKey... // Bearer ...accessToken...
+        const tokenKey = auth ? auth.split(' ') : null // ['Token', '...tokenKey...'] // ['Bearer', '...accessToken...']
 
-        let result = {}
-        if (tokenKey && tokenKey[0] == 'Token') {
-            result = await Token.deleteOne({ token: tokenKey[1] })
+        let message = null, result = {}
+
+        if (tokenKey) {
+
+            if (tokenKey[0] == 'Token') { // SimpleToken
+
+                result = await Token.deleteOne({ token: tokenKey[1] })
+                message = 'Token deleted. Logout was OK.'
+
+            } else { // JWT
+
+                message = 'No need any process for logout. You must delete JWT tokens.'
+            }
         }
 
         res.send({
             error: false,
-            message: 'Logout was OK.',
+            message,
             result
         })
     },
